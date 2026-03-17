@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+// @ts-expect-error FIXME snarkdown does not provide type definitions
 import snarkdown from 'snarkdown'
 
 import { LoginAdminInstruction } from './challenges/loginAdmin'
@@ -150,10 +151,12 @@ function loadHint (hint: ChallengeHint): HTMLElement {
 
   wrapper.appendChild(relAnchor)
 
-  if (hint.fixtureAfter) {
-    target.parentElement.insertBefore(wrapper, target.nextSibling)
-  } else {
-    target.parentElement.insertBefore(wrapper, target)
+  if (target.parentElement) {
+    if (hint.fixtureAfter) {
+      target.parentElement.insertBefore(wrapper, target.nextSibling)
+    } else {
+      target.parentElement.insertBefore(wrapper, target)
+    }
   }
 
   return wrapper
@@ -165,7 +168,7 @@ async function waitForDoubleClick (element: HTMLElement) {
   })
 }
 
-async function waitForCancel (element: HTMLElement) {
+async function waitForCancel (element: HTMLElement): Promise<string> {
   return new Promise((resolve) => {
     element.addEventListener('click', () => {
       resolve('break')
@@ -213,7 +216,11 @@ export async function startHackingInstructorFor (challengeName: string): Promise
     if (!hint.unskippable) {
       continueConditions.push(waitForDoubleClick(element))
     }
-    continueConditions.push(waitForCancel(document.getElementById('cancelButton')))
+    
+    const cancelButton = document.getElementById('cancelButton')
+    if (cancelButton) {
+      continueConditions.push(waitForCancel(cancelButton))
+    }
 
     const command = await Promise.race(continueConditions)
     if (command === 'break') {
