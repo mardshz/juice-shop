@@ -12,6 +12,7 @@ import * as challengeUtils from '../lib/challengeUtils'
 import { challenges } from '../data/datacache'
 import * as security from '../lib/insecurity'
 import { UserModel } from '../models/user'
+import * as utils from '../lib/utils'
 
 const router = express.Router()
 
@@ -22,12 +23,17 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     return
   }
   const email = loggedInUser.data.email
+  const sanitizedEmail = utils.sanitizeEmail(email)
+  if (!sanitizedEmail) {
+    next(new Error('Invalid email format'))
+    return
+  }
 
   try {
     const answer = await SecurityAnswerModel.findOne({
       include: [{
         model: UserModel,
-        where: { email }
+        where: { email: sanitizedEmail }
       }]
     })
     if (answer == null) {
