@@ -47,7 +47,7 @@ export function placeOrder () {
         if (basket != null) {
           const customer = security.authenticatedUsers.from(req)
           const rawEmail = customer ? customer.data ? customer.data.email : '' : ''
-          const email = utils.sanitizeEmail(rawEmail) || ''
+          const email = utils.sanitizeEmail(rawEmail) ?? ''
           const orderId = security.hash(email).slice(0, 4) + '-' + utils.randomHexString(16)
           const pdfFile = `order_${orderId}.pdf`
           const doc = new PDFDocument()
