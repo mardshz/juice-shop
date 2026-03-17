@@ -72,6 +72,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
     var scope = this;
 
+    // eslint-disable-next-line no-loss-of-precision
     const EPS = 1e-6;
 
     var rotateStart = new THREE.Vector2();
