@@ -12,7 +12,7 @@ import * as utils from '../lib/utils'
 import { type Review } from '../data/types'
 import * as db from '../data/mongodb'
 
-const sleep = async (ms: number) => await new Promise(resolve => setTimeout(resolve, ms))
+const sleep = async (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export function likeProductReviews () {
   return async (req: Request, res: Response, next: NextFunction) => {
