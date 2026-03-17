@@ -12,6 +12,7 @@ import * as security from '../lib/insecurity'
 import { UserModel } from '../models/user'
 import { CardModel } from '../models/card'
 import * as utils from '../lib/utils'
+import { sendError } from '../lib/errorResponse'
 
 export function upgradeToDeluxe () {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -19,16 +20,15 @@ export function upgradeToDeluxe () {
     const paymentId = utils.sanitizeInteger(req.body.paymentId)
 
     if (userId == null) {
-      res.status(400).json({ status: 'error', error: 'Invalid user id' })
-      return
+      return sendError(res, 400, 'Invalid user id')
     }
 
     try {
       const user = await UserModel.findOne({ where: { id: userId, role: security.roles.customer } })
       if (user == null) {
-        res.status(400).json({ status: 'error', error: 'Something went wrong. Please try again!' })
-        return
+        return sendError(res, 400, 'Something went wrong. Please try again!')
       }
+
       if (req.body.paymentMode === 'wallet') {
         const wallet = await WalletModel.findOne({ where: { UserId: userId } })
         if ((wallet != null) && wallet.balance < 49) {

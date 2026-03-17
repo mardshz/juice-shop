@@ -18,6 +18,7 @@ import { faEdit } from '@fortawesome/free-regular-svg-icons'
 import { FormSubmitService } from '../Services/form-submit.service'
 import { TranslateService, TranslateModule } from '@ngx-translate/core'
 import { MatButtonModule } from '@angular/material/button'
+import { matchValidator } from '../shared/validators/password-match.validator'
 
 import { MatInputModule } from '@angular/material/input'
 import {
@@ -138,18 +139,5 @@ export class ChangePasswordComponent implements OnInit {
     this.repeatNewPasswordControl.setValue('')
     this.repeatNewPasswordControl.markAsPristine()
     this.repeatNewPasswordControl.markAsUntouched()
-  }
-}
-
-function matchValidator (newPasswordControl: AbstractControl) {
-  return function matchOtherValidate (
-    repeatNewPasswordControl: UntypedFormControl
-  ) {
-    const password = newPasswordControl.value
-    const passwordRepeat = repeatNewPasswordControl.value
-    if (password !== passwordRepeat) {
-      return { notSame: true }
-    }
-    return null
   }
 }

@@ -6,12 +6,13 @@
 import { type Request, type Response } from 'express'
 import { AddressModel } from '../models/address'
 import * as utils from '../lib/utils'
+import { sendError } from '../lib/errorResponse'
 
 export function getAddress () {
   return async (req: Request, res: Response) => {
     const userId = utils.sanitizeInteger(req.body.UserId)
     if (userId == null) {
-      return res.status(400).json({ status: 'error', data: 'Invalid user id' })
+      return sendError(res, 400, 'Invalid user id')
     }
     const addresses = await AddressModel.findAll({ where: { UserId: userId } })
     res.status(200).json({ status: 'success', data: addresses })

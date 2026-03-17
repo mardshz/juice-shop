@@ -18,6 +18,7 @@ import { PasswordStrengthInfoComponent } from '../password-strength-info/passwor
 import { MatSlideToggle } from '@angular/material/slide-toggle'
 
 import { MatTooltip } from '@angular/material/tooltip'
+import { matchValidator } from '../shared/validators/password-match.validator'
 import { MatIconModule } from '@angular/material/icon'
 import { MatInputModule } from '@angular/material/input'
 import { MatFormFieldModule, MatLabel, MatSuffix, MatError, MatHint } from '@angular/material/form-field'
@@ -129,16 +130,5 @@ export class ForgotPasswordComponent {
     this.repeatPasswordControl.setValue('')
     this.repeatPasswordControl.markAsPristine()
     this.repeatPasswordControl.markAsUntouched()
-  }
-}
-
-function matchValidator (passwordControl: AbstractControl) {
-  return function matchOtherValidate (repeatPasswordControl: UntypedFormControl) {
-    const password = passwordControl.value
-    const passwordRepeat = repeatPasswordControl.value
-    if (password !== passwordRepeat) {
-      return { notSame: true }
-    }
-    return null
   }
 }

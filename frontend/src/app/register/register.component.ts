@@ -18,6 +18,7 @@ import { SnackBarHelperService } from '../Services/snack-bar-helper.service'
 import { TranslateService, TranslateModule } from '@ngx-translate/core'
 import { type SecurityQuestion } from '../Models/securityQuestion.model'
 import { MatButtonModule } from '@angular/material/button'
+import { matchValidator } from '../shared/validators/password-match.validator'
 import { MatOption } from '@angular/material/core'
 import { MatSelect } from '@angular/material/select'
 import { PasswordStrengthComponent } from '../password-strength/password-strength.component'
@@ -102,16 +103,5 @@ export class RegisterComponent implements OnInit {
         }
       }
     })
-  }
-}
-
-function matchValidator (passwordControl: AbstractControl) {
-  return function matchOtherValidate (repeatPasswordControl: UntypedFormControl) {
-    const password = passwordControl.value
-    const passwordRepeat = repeatPasswordControl.value
-    if (password !== passwordRepeat) {
-      return { notSame: true }
-    }
-    return null
   }
 }

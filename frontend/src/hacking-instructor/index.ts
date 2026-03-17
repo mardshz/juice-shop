@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-// @ts-expect-error FIXME snarkdown does not provide type definitions
 import snarkdown from 'snarkdown'
 
 import { LoginAdminInstruction } from './challenges/loginAdmin'

@@ -10,6 +10,23 @@ import { RouterTestingModule } from '@angular/router/testing'
 import { ErrorPageComponent } from './error-page/error-page.component'
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 
+function createJwtToken (payload: any): string {
+  const encode = (obj: any) => {
+    const json = JSON.stringify(obj)
+    const base64 = typeof btoa !== 'undefined'
+      ? btoa(json)
+      : (typeof (globalThis as any).Buffer !== 'undefined'
+        ? (globalThis as any).Buffer.from(json).toString('base64')
+        : '')
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  }
+  const header = { alg: 'HS256', typ: 'JWT' }
+  const encodedHeader = encode(header)
+  const encodedPayload = encode(payload)
+  const signature = 'signature'
+  return `${encodedHeader}.${encodedPayload}.${signature}`
+}
+
 describe('LoginGuard', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -35,7 +52,11 @@ describe('LoginGuard', () => {
   }))
 
   it('returns payload from decoding a valid JWT', inject([LoginGuard], (guard: LoginGuard) => {
-    localStorage.setItem('token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+    localStorage.setItem('token', createJwtToken({
+      sub: '1234567890',
+      name: 'John Doe',
+      iat: 1516239022
+    }))
     expect(guard.tokenDecode()).toEqual({
       sub: '1234567890',
       name: 'John Doe',
