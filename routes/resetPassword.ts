@@ -11,20 +11,24 @@ import { SecurityAnswerModel } from '../models/securityAnswer'
 import * as challengeUtils from '../lib/challengeUtils'
 import { challenges, users } from '../data/datacache'
 import * as security from '../lib/insecurity'
+import * as utils from '../lib/utils'
 import { UserModel } from '../models/user'
 
 export function resetPassword () {
   const sanitize = (value: unknown): string => typeof value === 'string' ? value.trim() : ''
-  const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
   const isSafeString = (value: string): boolean => value.length > 0 && value.length <= 200 && /^[\x20-\x7E]*$/.test(value)
 
   return async ({ body, connection }: Request, res: Response, next: NextFunction) => {
-    const email = sanitize(body.email)
+    const email = utils.sanitizeEmail(body.email)
+    if (!email) {
+      next(new Error('Blocked illegal activity by ' + connection.remoteAddress))
+      return
+    }
     const answer = sanitize(body.answer)
     const newPassword = sanitize(body.new)
     const repeatPassword = sanitize(body.repeat)
 
-    if (!email || !answer || !isValidEmail(email) || !isSafeString(answer)) {
+    if (!answer || !isSafeString(answer)) {
       next(new Error('Blocked illegal activity by ' + connection.remoteAddress))
       return
     }
