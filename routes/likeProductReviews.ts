@@ -8,6 +8,7 @@ import { type Request, type Response, type NextFunction } from 'express'
 import * as challengeUtils from '../lib/challengeUtils'
 import { challenges } from '../data/datacache'
 import * as security from '../lib/insecurity'
+import * as utils from '../lib/utils'
 import { type Review } from '../data/types'
 import * as db from '../data/mongodb'
 
@@ -15,10 +16,13 @@ const sleep = async (ms: number) => await new Promise(resolve => setTimeout(reso
 
 export function likeProductReviews () {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const id = req.body.id
+    const id = utils.sanitizeForId(req.body.id)
     const user = security.authenticatedUsers.from(req)
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' })
+    }
+    if (!id) {
+      return res.status(400).json({ error: 'Invalid id' })
     }
 
     try {

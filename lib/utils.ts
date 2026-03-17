@@ -218,6 +218,44 @@ export const toSimpleIpAddress = (ipv6: string) => {
   }
 }
 
+export const sanitizeForId = (value: unknown): string | null => {
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return null
+  }
+  const str = String(value).trim()
+  if (str.length === 0 || str.length > 128) {
+    return null
+  }
+  // Permit only a safe subset of characters for identifiers
+  if (!/^[A-Za-z0-9_-]+$/.test(str)) {
+    return null
+  }
+  return str
+}
+
+export const sanitizeInteger = (value: unknown): number | null => {
+  const num = Number(value)
+  if (!Number.isInteger(num)) {
+    return null
+  }
+  return num
+}
+
+export const sanitizeEmail = (value: unknown): string | null => {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const email = value.trim()
+  if (email.length === 0 || email.length > 254) {
+    return null
+  }
+  // Simple email validation pattern (will also reject most injection attempts)
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return null
+  }
+  return email
+}
+
 export const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return error.message
   return String(error)

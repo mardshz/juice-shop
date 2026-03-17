@@ -5,6 +5,7 @@
 
 import { type Request, type Response, type NextFunction } from 'express'
 import { CaptchaModel } from '../models/captcha'
+import * as utils from '../lib/utils'
 
 export function captchas () {
   return async (req: Request, res: Response) => {
@@ -34,7 +35,13 @@ export function captchas () {
 
 export const verifyCaptcha = () => async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const captcha = await CaptchaModel.findOne({ where: { captchaId: req.body.captchaId } })
+    const captchaId = utils.sanitizeInteger(req.body.captchaId)
+    if (captchaId == null) {
+      res.status(400).send(res.__('Wrong answer to CAPTCHA. Please try again.'))
+      return
+    }
+
+    const captcha = await CaptchaModel.findOne({ where: { captchaId } })
     if ((captcha != null) && req.body.captcha === captcha.answer) {
       next()
     } else {

@@ -15,12 +15,15 @@ import { challenges } from '../data/datacache'
 export function retrieveBasket () {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const id = req.params.id
+      const id = utils.sanitizeInteger(req.params.id)
+      if (id == null) {
+        throw new Error('Invalid basket id')
+      }
       const basket = await BasketModel.findOne({ where: { id }, include: [{ model: ProductModel, paranoid: false, as: 'Products' }] })
       /* jshint eqeqeq:false */
       challengeUtils.solveIf(challenges.basketAccessChallenge, () => {
         const user = security.authenticatedUsers.from(req)
-        return user && id && id !== 'undefined' && id !== 'null' && id !== 'NaN' && user.bid && user?.bid != parseInt(id, 10) // eslint-disable-line eqeqeq
+        return user && id && user.bid && user?.bid != id // eslint-disable-line eqeqeq
       })
       if (((basket?.Products) != null) && basket.Products.length > 0) {
         for (let i = 0; i < basket.Products.length; i++) {

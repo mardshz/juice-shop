@@ -4,6 +4,7 @@
  */
 
 import { type Request, type Response, type NextFunction } from 'express'
+import * as utils from '../lib/utils'
 import { CardModel } from '../models/card'
 
 interface displayCard {
@@ -17,8 +18,13 @@ interface displayCard {
 
 export function getPaymentMethods () {
   return async (req: Request, res: Response, next: NextFunction) => {
+    const userId = utils.sanitizeInteger(req.body.UserId)
+    if (userId == null) {
+      return res.status(400).json({ status: 'error', error: 'Invalid user id' })
+    }
+
     const displayableCards: displayCard[] = []
-    const cards = await CardModel.findAll({ where: { UserId: req.body.UserId } })
+    const cards = await CardModel.findAll({ where: { UserId: userId } })
     cards.forEach(card => {
       const displayableCard: displayCard = {
         UserId: card.UserId,
@@ -38,7 +44,13 @@ export function getPaymentMethods () {
 
 export function getPaymentMethodById () {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const card = await CardModel.findOne({ where: { id: req.params.id, UserId: req.body.UserId } })
+    const cardId = utils.sanitizeInteger(req.params.id)
+    const userId = utils.sanitizeInteger(req.body.UserId)
+    if (cardId == null || userId == null) {
+      return res.status(400).json({ status: 'error', data: 'Invalid parameters' })
+    }
+
+    const card = await CardModel.findOne({ where: { id: cardId, UserId: userId } })
     const displayableCard: displayCard = {
       UserId: 0,
       id: 0,
@@ -67,7 +79,13 @@ export function getPaymentMethodById () {
 
 export function delPaymentMethodById () {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const card = await CardModel.destroy({ where: { id: req.params.id, UserId: req.body.UserId } })
+    const cardId = utils.sanitizeInteger(req.params.id)
+    const userId = utils.sanitizeInteger(req.body.UserId)
+    if (cardId == null || userId == null) {
+      return res.status(400).json({ status: 'error', data: 'Invalid parameters' })
+    }
+
+    const card = await CardModel.destroy({ where: { id: cardId, UserId: userId } })
     if (card) {
       res.status(200).json({ status: 'success', data: 'Card deleted successfully.' })
     } else {

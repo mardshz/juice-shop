@@ -32,7 +32,16 @@ interface Product {
 
 export function placeOrder () {
   return (req: Request, res: Response, next: NextFunction) => {
-    const id = req.params.id
+    const id = utils.sanitizeInteger(req.params.id)
+    if (id == null) {
+      next(new Error('Invalid basket id'))
+      return
+    }
+    const userId = utils.sanitizeInteger(req.body.UserId)
+    const paymentMode = utils.sanitizeForId(req.body.orderDetails?.paymentId)
+    const deliveryMethodId = utils.sanitizeInteger(req.body.orderDetails?.deliveryMethodId)
+    const addressId = utils.sanitizeInteger(req.body.orderDetails?.addressId)
+
     BasketModel.findOne({ where: { id }, include: [{ model: ProductModel, paranoid: false, as: 'Products' }] })
       .then(async (basket: BasketModel | null) => {
         if (basket != null) {
@@ -115,8 +124,8 @@ export function placeOrder () {
             price: 0,
             eta: 5
           }
-          if (req.body.orderDetails?.deliveryMethodId) {
-            const deliveryMethodFromModel = await DeliveryModel.findOne({ where: { id: req.body.orderDetails.deliveryMethodId } })
+          if (deliveryMethodId != null) {
+            const deliveryMethodFromModel = await DeliveryModel.findOne({ where: { id: deliveryMethodId } })
             if (deliveryMethodFromModel != null) {
               deliveryMethod.deluxePrice = deliveryMethodFromModel.deluxePrice
               deliveryMethod.price = deliveryMethodFromModel.price
@@ -137,18 +146,18 @@ export function placeOrder () {
 
           challengeUtils.solveIf(challenges.negativeOrderChallenge, () => { return totalPrice < 0 })
 
-          if (req.body.UserId) {
-            if (req.body.orderDetails && req.body.orderDetails.paymentId === 'wallet') {
-              const wallet = await WalletModel.findOne({ where: { UserId: req.body.UserId } })
+          if (userId != null) {
+            if (paymentMode === 'wallet') {
+              const wallet = await WalletModel.findOne({ where: { UserId: userId } })
               if ((wallet != null) && wallet.balance >= totalPrice) {
-                await WalletModel.decrement({ balance: totalPrice }, { where: { UserId: req.body.UserId } })
+                await WalletModel.decrement({ balance: totalPrice }, { where: { UserId: userId } })
               } else {
                 next(new Error('Insufficient wallet balance.'))
                 return
               }
             }
             try {
-              await WalletModel.increment({ balance: totalPoints }, { where: { UserId: req.body.UserId } })
+              await WalletModel.increment({ balance: totalPoints }, { where: { UserId: userId } })
             } catch (error: unknown) {
               next(error)
               return
@@ -157,8 +166,8 @@ export function placeOrder () {
 
           db.ordersCollection.insert({
             promotionalAmount: discountAmount,
-            paymentId: req.body.orderDetails ? req.body.orderDetails.paymentId : null,
-            addressId: req.body.orderDetails ? req.body.orderDetails.addressId : null,
+            paymentId: paymentMode,
+            addressId,
             orderId,
             delivered: false,
             email: (email ? email.replace(/[aeiou]/gi, '*') : undefined),

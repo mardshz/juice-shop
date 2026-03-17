@@ -7,15 +7,20 @@ import { type Request, type Response, type NextFunction } from 'express'
 import { SecurityAnswerModel } from '../models/securityAnswer'
 import { UserModel } from '../models/user'
 import { SecurityQuestionModel } from '../models/securityQuestion'
+import * as utils from '../lib/utils'
 
 export function securityQuestion () {
   return async ({ query }: Request, res: Response, next: NextFunction) => {
-    const email = query.email
+    const email = utils.sanitizeEmail(query.email)
+    if (!email) {
+      res.json({})
+      return
+    }
     try {
       const answer = await SecurityAnswerModel.findOne({
         include: [{
           model: UserModel,
-          where: { email: email?.toString() }
+          where: { email }
         }]
       })
       if (answer != null) {

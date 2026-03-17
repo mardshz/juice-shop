@@ -14,15 +14,21 @@ import * as security from '../lib/insecurity'
 import { UserModel } from '../models/user'
 
 export function resetPassword () {
+  const sanitize = (value: unknown): string => typeof value === 'string' ? value.trim() : ''
+  const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  const isSafeString = (value: string): boolean => value.length > 0 && value.length <= 200 && /^[\x20-\x7E]*$/.test(value)
+
   return async ({ body, connection }: Request, res: Response, next: NextFunction) => {
-    const email = body.email
-    const answer = body.answer
-    const newPassword = body.new
-    const repeatPassword = body.repeat
-    if (!email || !answer) {
+    const email = sanitize(body.email)
+    const answer = sanitize(body.answer)
+    const newPassword = sanitize(body.new)
+    const repeatPassword = sanitize(body.repeat)
+
+    if (!email || !answer || !isValidEmail(email) || !isSafeString(answer)) {
       next(new Error('Blocked illegal activity by ' + connection.remoteAddress))
       return
     }
+
     if (!newPassword || newPassword === 'undefined') {
       res.status(401).send(res.__('Password cannot be empty.'))
       return
@@ -31,6 +37,7 @@ export function resetPassword () {
       res.status(401).send(res.__('New and repeated password do not match.'))
       return
     }
+
     try {
       const data = await SecurityAnswerModel.findOne({
         include: [{

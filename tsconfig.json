@@ -27,6 +27,7 @@
     "views/**/*.ts",
     "views/**/*.js",
     "rsn/**/*.ts",
+    "typings/**/*.ts",
     "*.ts"
   ],
   "exclude": [
