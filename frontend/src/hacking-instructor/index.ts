@@ -160,13 +160,13 @@ function loadHint (hint: ChallengeHint): HTMLElement {
 }
 
 async function waitForDoubleClick (element: HTMLElement) {
-  return await new Promise((resolve) => {
+  return new Promise((resolve) => {
     element.addEventListener('dblclick', resolve)
   })
 }
 
 async function waitForCancel (element: HTMLElement) {
-  return await new Promise((resolve) => {
+  return new Promise((resolve) => {
     element.addEventListener('click', () => {
       resolve('break')
     })

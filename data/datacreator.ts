@@ -110,10 +110,10 @@ async function createChallenges () {
 
 async function createHints (ChallengeId: number, hints: string[]) {
   let i: number = 0
-  return await Promise.all(
+  return Promise.all(
     hints.map(async (hint) => {
       hint = hint.replace(/OWASP Juice Shop/, `${config.get<string>('application.name')}`)
-      return await HintModel.create({
+      return HintModel.create({
         ChallengeId,
         text: hint,
         order: ++i,
@@ -157,9 +157,9 @@ async function createUsers () {
 
 async function createWallet () {
   const users = await loadStaticUserData()
-  return await Promise.all(
+  return Promise.all(
     users.map(async (user: StaticUser, index: number) => {
-      return await WalletModel.create({
+      return WalletModel.create({
         UserId: index + 1,
         balance: user.walletBalance ?? 0
       }).catch((err: unknown) => {
@@ -190,9 +190,9 @@ async function createDeliveryMethods () {
 }
 
 async function createAddresses (UserId: number, addresses: StaticUserAddress[]) {
-  return await Promise.all(
+  return Promise.all(
     addresses.map(async (address) => {
-      return await AddressModel.create({
+      return AddressModel.create({
         UserId,
         country: address.country,
         fullName: address.fullName,
@@ -209,8 +209,8 @@ async function createAddresses (UserId: number, addresses: StaticUserAddress[]) 
 }
 
 async function createCards (UserId: number, cards: StaticUserCard[]) {
-  return await Promise.all(cards.map(async (card) => {
-    return await CardModel.create({
+  return Promise.all(cards.map(async (card) => {
+    return CardModel.create({
       UserId,
       fullName: card.fullName,
       cardNum: Number(card.cardNum),
@@ -223,13 +223,13 @@ async function createCards (UserId: number, cards: StaticUserCard[]) {
 }
 
 async function deleteUser (userId: number) {
-  return await UserModel.destroy({ where: { id: userId } }).catch((err: unknown) => {
+  return UserModel.destroy({ where: { id: userId } }).catch((err: unknown) => {
     logger.error(`Could not perform soft delete for the user ${userId}: ${utils.getErrorMessage(err)}`)
   })
 }
 
 async function deleteProduct (productId: number) {
-  return await ProductModel.destroy({ where: { id: productId } }).catch((err: unknown) => {
+  return ProductModel.destroy({ where: { id: productId } }).catch((err: unknown) => {
     logger.error(`Could not perform soft delete for the product ${productId}: ${utils.getErrorMessage(err)}`)
   })
 }
@@ -249,8 +249,8 @@ async function createRandomFakeUsers () {
     return text
   }
 
-  return await Promise.all(new Array(config.get('application.numberOfRandomFakeUsers')).fill(0).map(
-    async () => await UserModel.create({
+  return Promise.all(new Array(config.get('application.numberOfRandomFakeUsers')).fill(0).map(
+    async () => UserModel.create({
       email: getGeneratedRandomFakeUserEmail(),
       password: makeRandomString(5)
     })
@@ -258,9 +258,9 @@ async function createRandomFakeUsers () {
 }
 
 async function createQuantity () {
-  return await Promise.all(
+  return Promise.all(
     config.get<ProductConfig[]>('products').map(async (product, index) => {
-      return await QuantityModel.create({
+      return QuantityModel.create({
         ProductId: index + 1,
         quantity: product.quantity ?? Math.floor(Math.random() * 70 + 30),
         limitPerUser: product.limitPerUser ?? null
@@ -305,7 +305,7 @@ async function createMemories () {
         return
       }
 
-      return await MemoryModel.create({
+      return MemoryModel.create({
         imagePath: 'assets/public/images/uploads/' + tmpImageFileName,
         caption: memory.caption,
         UserId: userIdOfMemory
@@ -315,7 +315,7 @@ async function createMemories () {
     })
   ]
 
-  return await Promise.all(memories)
+  return Promise.all(memories)
 }
 
 async function createProducts () {
@@ -363,10 +363,10 @@ async function createProducts () {
     datacache.setRetrieveBlueprintChallengeFile(blueprint)
   }
 
-  return await Promise.all(
+  return Promise.all(
     products.map(
       async ({ reviews = [], useForChristmasSpecialChallenge = false, urlForProductTamperingChallenge = false, fileForRetrieveBlueprintChallenge = false, deletedDate = false, ...product }) =>
-        await ProductModel.create({
+        ProductModel.create({
           name: product.name,
           description: product.description,
           price: product.price,
@@ -395,7 +395,7 @@ async function createProducts () {
           return persistedProduct
         })
           .then(async ({ id }: { id: number }) =>
-            await Promise.all(
+            Promise.all(
               reviews.map(({ text, author }) =>
                 reviewsCollection.insert({
                   message: text,
@@ -428,9 +428,9 @@ async function createBaskets () {
     { UserId: 16 }
   ]
 
-  return await Promise.all(
+  return Promise.all(
     baskets.map(async basket => {
-      return await BasketModel.create({
+      return BasketModel.create({
         UserId: basket.UserId
       }).catch((err: unknown) => {
         logger.error(`Could not insert Basket for UserId ${basket.UserId}: ${utils.getErrorMessage(err)}`)
@@ -483,9 +483,9 @@ async function createBasketItems () {
     }
   ]
 
-  return await Promise.all(
+  return Promise.all(
     basketItems.map(async basketItem => {
-      return await BasketItemModel.create(basketItem).catch((err: unknown) => {
+      return BasketItemModel.create(basketItem).catch((err: unknown) => {
         logger.error(`Could not insert BasketItem for BasketId ${basketItem.BasketId}: ${utils.getErrorMessage(err)}`)
       })
     })
@@ -512,20 +512,20 @@ async function createAnonymousFeedback () {
     }
   ]
 
-  return await Promise.all(
-    feedbacks.map(async (feedback) => await createFeedback(null, feedback.comment, feedback.rating))
+  return Promise.all(
+    feedbacks.map(async (feedback) => createFeedback(null, feedback.comment, feedback.rating))
   )
 }
 
 async function createFeedback (UserId: number | null, comment: string, rating: number, author?: string) {
   const authoredComment = author ? `${comment} (***${author.slice(3)})` : `${comment} (anonymous)`
-  return await FeedbackModel.create({ UserId, comment: authoredComment, rating }).catch((err: unknown) => {
+  return FeedbackModel.create({ UserId, comment: authoredComment, rating }).catch((err: unknown) => {
     logger.error(`Could not insert Feedback ${authoredComment} mapped to UserId ${UserId}: ${utils.getErrorMessage(err)}`)
   })
 }
 
 async function createComplaints () {
-  return await ComplaintModel.create({
+  return ComplaintModel.create({
     UserId: 3,
     message: 'I\'ll build my own eCommerce business! With Black Jack! And Hookers!'
   }).catch((err: unknown) => {
@@ -599,13 +599,13 @@ async function createRecycleItem () {
       isPickup: true
     }
   ]
-  return await Promise.all(
-    recycles.map(async (recycle) => await createRecycle(recycle))
+  return Promise.all(
+    recycles.map(async (recycle) => createRecycle(recycle))
   )
 }
 
 async function createRecycle (data: { UserId: number, quantity: number, AddressId: number, date: string, isPickup: boolean }) {
-  return await RecycleModel.create({
+  return RecycleModel.create({
     UserId: data.UserId,
     AddressId: data.AddressId,
     quantity: data.quantity,
@@ -631,7 +631,7 @@ async function createSecurityQuestions () {
 }
 
 async function createSecurityAnswer (UserId: number, SecurityQuestionId: number, answer: string) {
-  return await SecurityAnswerModel.create({ SecurityQuestionId, UserId, answer }).catch((err: unknown) => {
+  return SecurityAnswerModel.create({ SecurityQuestionId, UserId, answer }).catch((err: unknown) => {
     logger.error(`Could not insert SecurityAnswer ${answer} mapped to UserId ${UserId}: ${utils.getErrorMessage(err)}`)
   })
 }
@@ -718,7 +718,7 @@ async function createOrders () {
     }
   ]
 
-  return await Promise.all(
+  return Promise.all(
     orders.map(({ orderId, email, totalPrice, bonus, products, eta, delivered }) =>
       ordersCollection.insert({
         orderId,

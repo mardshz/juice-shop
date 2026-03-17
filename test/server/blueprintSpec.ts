@@ -15,7 +15,7 @@ const expect = chai.expect
 chai.use(sinonChai)
 
 async function parseExifData (path: string): Promise<any> {
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     // eslint-disable-next-line no-new
     new ExifImage({ image: path }, (error: Error | null, exifData: any) => {
       if (error != null) {

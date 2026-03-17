@@ -96,7 +96,7 @@ export const checkIfDomainReachable = async (domain: string) => {
 
 export const checkIfPortIsAvailable = async (port: number | string) => {
   const portNumber = parseInt(port.toString())
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     portscanner.checkPortStatus(portNumber, function (error: unknown, status: string) {
       if (error) {
         reject(error)
@@ -116,7 +116,7 @@ export const checkIfPortIsAvailable = async (port: number | string) => {
 export const checkIfRequiredFileExists = async (pathRelativeToProjectRoot: string) => {
   const fileName = pathRelativeToProjectRoot.substr(pathRelativeToProjectRoot.lastIndexOf('/') + 1)
 
-  return await access(path.resolve(pathRelativeToProjectRoot)).then(() => {
+  return access(path.resolve(pathRelativeToProjectRoot)).then(() => {
     logger.info(`Required file ${colors.bold(fileName)} is present (${colors.green('OK')})`)
     return true
   }).catch(() => {

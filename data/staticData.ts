@@ -4,9 +4,9 @@ import { safeLoad } from 'js-yaml'
 import logger from '../lib/logger'
 import { type ChallengeKey } from 'models/challenge'
 
-export async function loadStaticData (file: string) {
+export async function loadStaticData (file: string): Promise<any> {
   const filePath = path.resolve('./data/static/' + file + '.yml')
-  return await readFile(filePath, 'utf8')
+  return readFile(filePath, 'utf8')
     .then(safeLoad)
     .catch(() => logger.error('Could not open file: "' + filePath + '"'))
 }
@@ -53,7 +53,7 @@ export interface StaticUserCard {
   expYear: number
 }
 export async function loadStaticUserData (): Promise<StaticUser[]> {
-  return await loadStaticData('users') as StaticUser[]
+  return loadStaticData('users') as Promise<StaticUser[]>
 }
 
 export interface StaticChallenge {
@@ -73,7 +73,7 @@ export interface StaticChallenge {
   }
 }
 export async function loadStaticChallengeData (): Promise<StaticChallenge[]> {
-  return await loadStaticData('challenges') as StaticChallenge[]
+  return loadStaticData('challenges') as Promise<StaticChallenge[]>
 }
 
 export interface StaticDelivery {
@@ -84,12 +84,12 @@ export interface StaticDelivery {
   icon: string
 }
 export async function loadStaticDeliveryData (): Promise<StaticDelivery[]> {
-  return await loadStaticData('deliveries') as StaticDelivery[]
+  return loadStaticData('deliveries') as Promise<StaticDelivery[]>
 }
 
 export interface StaticSecurityQuestions {
   question: string
 }
 export async function loadStaticSecurityQuestionsData (): Promise<StaticSecurityQuestions[]> {
-  return await loadStaticData('securityQuestions') as StaticSecurityQuestions[]
+  return loadStaticData('securityQuestions') as Promise<StaticSecurityQuestions[]>
 }

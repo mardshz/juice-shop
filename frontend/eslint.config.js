@@ -39,7 +39,8 @@ module.exports = tseslint.config(
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-redundant-type-constituents": "off",
       "@typescript-eslint/unbound-method": "off",
-      "@angular-eslint/no-output-on-prefix": "off"
+      "@angular-eslint/no-output-on-prefix": "off",
+      "@typescript-eslint/return-await": ["error", "in-try-catch"]
     },
   },
   {
