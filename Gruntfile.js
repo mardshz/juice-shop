@@ -69,20 +69,43 @@ module.exports = function (grunt) {
     }
   })
 
-  grunt.registerTask('checksum', 'Create .md5 checksum files', function () {
-    const fs = require('node:fs')
-    const crypto = require('node:crypto')
-    fs.readdirSync('dist/').forEach(file => {
-      const buffer = fs.readFileSync('dist/' + file)
-      const md5 = crypto.createHash('md5')
-      md5.update(buffer)
-      const md5Hash = md5.digest('hex')
-      const md5FileName = 'dist/' + file + '.md5'
-      grunt.file.write(md5FileName, md5Hash)
-      grunt.log.write(`Checksum ${md5Hash} written to file ${md5FileName}.`).verbose.write('...').ok()
-      grunt.log.writeln()
-    })
-  })
+grunt.registerTask('checksum', 'Create .md5 checksum files', function () {
+  const fs = require('node:fs');
+  const crypto = require('node:crypto');
+  const path = require('node:path');
+
+  const distDir = path.resolve('dist');
+
+  fs.readdirSync(distDir).forEach(file => {
+    const filePath = path.join(distDir, file);
+    const normalizedFilePath = path.normalize(filePath);
+
+    // Ensure the file path stays within /dist
+    if (!normalizedFilePath.startsWith(distDir)) {
+      grunt.log.warn(`Skipping invalid path: ${normalizedFilePath}`);
+      return;
+    }
+
+    const buffer = fs.readFileSync(normalizedFilePath);
+    const md5Hash = crypto.createHash('md5').update(buffer).digest('hex');
+
+    const md5FilePath = path.join(distDir, file + '.md5');
+    const normalizedMd5FilePath = path.normalize(md5FilePath);
+
+    // Ensure the checksum file path also stays within /dist
+    if (!normalizedMd5FilePath.startsWith(distDir)) {
+      grunt.log.warn(`Skipping invalid output path: ${normalizedMd5FilePath}`);
+      return;
+    }
+
+    grunt.file.write(normalizedMd5FilePath, md5Hash);
+    grunt.log
+      .write(`Checksum ${md5Hash} written to file ${normalizedMd5FilePath}.`)
+      .verbose.write('...')
+      .ok();
+    grunt.log.writeln();
+  });
+});
 
   grunt.loadNpmTasks('grunt-replace-json')
   grunt.loadNpmTasks('grunt-contrib-compress')

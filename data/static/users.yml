@@ -1,11 +1,10 @@
--
-  email: admin
-  password: 'admin123'
+- email: admin
+  password: ${USER_ADMIN_PASSWORD}
   key: admin
-  role: 'admin'
+  role: admin
   securityQuestion:
     id: 2
-    answer: '@xI98PxDO+06!'
+    answer: ${USER_ADMIN_SECURITY_ANSWER}
   feedback:
     comment: 'I love this shop! Best products in town! Highly recommended!'
     rating: 5
@@ -19,22 +18,22 @@
       country: 'Test'
   card:
     - fullName: 'Administrator'
-      cardNum: 4716190207394368
+      cardNum: ${USER_ADMIN_CARD_1}
       expMonth: 2
       expYear: 2081
     - fullName: 'Administrator'
-      cardNum: 4024007105648108
+      cardNum: ${USER_ADMIN_CARD_2}
       expMonth: 4
       expYear: 2086
--
-  email: jim
-  password: 'ncc-1701'
+
+- email: jim
+  password: ${USER_JIM_PASSWORD}
   key: jim
-  role: 'customer'
+  role: customer
   walletBalance: 100
   securityQuestion:
     id: 1
-    answer: 'Samuel' # https://en.wikipedia.org/wiki/James_T._Kirk
+    answer: ${USER_JIM_SECURITY_ANSWER}
   feedback:
     comment: 'Great shop! Awesome service!'
     rating: 4
@@ -55,17 +54,17 @@
       country: 'United Federation of Planets'
   card:
     - fullName: 'Jim'
-      cardNum: 5107891722278705
+      cardNum: ${USER_JIM_CARD_1}
       expMonth: 11
       expYear: 2099
--
-  email: bender
-  password: 'OhG0dPlease1nsertLiquor!'
+
+- email: bender
+  password: ${USER_BENDER_PASSWORD}
   key: bender
-  role: 'customer'
+  role: customer
   securityQuestion:
     id: 10
-    answer: "Stop'n'Drop" # http://futurama.wikia.com/wiki/Suicide_booth
+    answer: ${USER_BENDER_SECURITY_ANSWER}
   feedback:
     comment: 'Nothing useful available here!'
     rating: 1
@@ -79,16 +78,16 @@
       country: 'Planet Earth'
   card:
     - fullName: 'Bender'
-      cardNum: 4716943969046208
+      cardNum: ${USER_BENDER_CARD_1}
       expMonth: 2
       expYear: 2081
--
-  email: bjoern.kimminich@gmail.com
+
+- email: bjoern.kimminich@gmail.com
   username: bkimminich
-  password: 'bW9jLmxpYW1nQGhjaW5pbW1pay5ucmVvamI='
+  password: ${USER_BKIMMINICH_PASSWORD}
   customDomain: true
   key: bjoernGoogle
-  role: 'admin'
+  role: admin
   address:
     - fullName: 'Bjoern Kimminich'
       mobileNum: 4917000001
@@ -99,127 +98,127 @@
       country: 'Germany'
   card:
     - fullName: 'Bjoern Kimminich'
-      cardNum: 4815205605542754
+      cardNum: ${USER_BKIMMINICH_CARD_1}
       expMonth: 12
       expYear: 2092
--
-  email: ciso
-  password: 'mDLx?94T~1CfVfZMzw@sJ9f?s3L6lbMqE70FfI8^54jbNikY5fymx7c!YbJb'
+
+- email: ciso
+  password: ${USER_CISO_PASSWORD}
   key: ciso
-  role: 'deluxe'
+  role: deluxe
   securityQuestion:
     id: 7
-    answer: 'Brd?j8sEMziOvvBf§Be?jFZ77H?hgm'
--
-  email: support
-  password: 'J6aVjTgOpRs@?5l!Zkq2AYnCE@RF$P'
+    answer: ${USER_CISO_SECURITY_ANSWER}
+
+- email: support
+  password: ${USER_SUPPORT_PASSWORD}
   key: support
-  role: 'admin'
+  role: admin
   securityQuestion:
     id: 10
-    answer: 'SC OLEA SRL' # http://www.olea.com.ro/
--
-  email: morty
-  password: 'focusOnScienceMorty!focusOnScience'
+    answer: ${USER_SUPPORT_SECURITY_ANSWER}
+
+- email: morty
+  password: ${USER_MORTY_PASSWORD}
   key: morty
-  role: 'customer'
+  role: customer
   walletBalance: 100
   securityQuestion:
     id: 7
-    answer: '5N0wb41L' # http://rickandmorty.wikia.com/wiki/Snuffles
--
-  email: mc.safesearch
-  password: 'Mr. N00dles'
+    answer: ${USER_MORTY_SECURITY_ANSWER}
+
+- email: mc.safesearch
+  password: ${USER_SAFESEARCH_PASSWORD}
   key: rapper
-  role: 'customer'
+  role: customer
   walletBalance: 13337
   securityQuestion:
     id: 8
-    answer: 'I even shared my pizza bagels with you!'
--
-  email: J12934
-  password: '0Y8rMnww$*9VFYE§59-!Fg1L6t&6lB'
+    answer: ${USER_SAFESEARCH_SECURITY_ANSWER}
+
+- email: J12934
+  password: ${USER_J12934_PASSWORD}
   key: jannik
-  role: 'admin'
+  role: admin
   securityQuestion:
     id: 1
-    answer: 'azjTLprq2im6p86RbFrA41L'
--
-  email: wurstbrot
+    answer: ${USER_J12934_SECURITY_ANSWER}
+
+- email: wurstbrot
   username: wurstbrot
-  password: 'EinBelegtesBrotMitSchinkenSCHINKEN!'
-  totpSecret: IFTXE3SPOEYVURT2MRYGI52TKJ4HC3KH
+  password: ${USER_WURSTBROT_PASSWORD}
+  totpSecret: ${USER_WURSTBROT_TOTP_SECRET}
   key: timo
-  role: 'admin'
+  role: admin
   securityQuestion:
     id: 1
-    answer: 'NZMJLjEinU7TFElDIYW8'
--
-  email: amy
-  password: 'K1f.....................'
+    answer: ${USER_WURSTBROT_SECURITY_ANSWER}
+
+- email: amy
+  password: ${USER_AMY_PASSWORD}
   key: amy
-  role: 'customer'
+  role: customer
   walletBalance: 48
   securityQuestion:
     id: 8
-    answer: 'Dr. Dr. Dr. Dr. Zoidberg'
--
-  email: bjoern
-  password: 'monkey summer birthday are all bad passwords but work just fine in a long passphrase'
+    answer: ${USER_AMY_SECURITY_ANSWER}
+
+- email: bjoern
+  password: ${USER_BJOERN_PASSWORD}
   key: bjoern
   profileImage: '12.png'
-  role: 'admin'
+  role: admin
   isAdmin: true
   securityQuestion:
     id: 9
-    answer: 'West-2082' # http://www.alte-postleitzahlen.de/uetersen
--
-  email: bjoern@owasp.org
-  password: 'kitten lesser pooch karate buffoon indoors'
+    answer: ${USER_BJOERN_SECURITY_ANSWER}
+
+- email: bjoern@owasp.org
+  password: ${USER_BJOERN_OWASP_PASSWORD}
   customDomain: true
   key: bjoernOwasp
-  role: 'deluxe'
+  role: deluxe
   profileImage: '13.jpg'
   securityQuestion:
     id: 7
-    answer: 'Zaya' # https://www.youtube.com/watch?v=Lu0-kDdtVf4
--
-  email: chris.pike
-  password: 'uss enterprise'
+    answer: ${USER_BJOERN_OWASP_SECURITY_ANSWER}
+
+- email: chris.pike
+  password: ${USER_PIKE_PASSWORD}
   key: chris
-  role: 'customer'
+  role: customer
   deletedFlag: true
   securityQuestion:
     id: 1
-    answer: 'greenwood'
--
-  email: accountant
-  password: 'i am an awesome accountant'
+    answer: ${USER_PIKE_SECURITY_ANSWER}
+
+- email: accountant
+  password: ${USER_ACCOUNTANT_PASSWORD}
   key: accountant
-  role: 'accounting'
+  role: accounting
   lastLoginIp: '123.456.789'
   securityQuestion:
     id: 7
-    answer: 'sdAffsdfrefrbgreq3423'
--
-  email: uvogin
-  password: 'muda-muda > ora-ora' # https://www.youtube.com/watch?v=vnJv8IoLMwc
+    answer: ${USER_ACCOUNTANT_SECURITY_ANSWER}
+
+- email: uvogin
+  password: ${USER_UVOGIN_PASSWORD}
   key: uvogin
-  role: 'customer'
+  role: customer
   walletBalance: 100
   securityQuestion:
     id: 12
-    answer: 'Silence of the Lambs' # https://www.imdb.com/title/tt0102926/
--
-  email: demo
-  password: 'demo'
+    answer: ${USER_UVOGIN_SECURITY_ANSWER}
+
+- email: demo
+  password: ${USER_DEMO_PASSWORD}
   customDomain: true
   key: test
-  role: 'customer'
+  role: customer
   walletBalance: 200
   securityQuestion:
     id: 10
-    answer: 'ACME Inc.'
+    answer: ${USER_DEMO_SECURITY_ANSWER}
   address:
     - fullName: 'Tim Tester'
       mobileNum: 4917000000
@@ -230,45 +229,45 @@
       country: 'United Fakedom'
   card:
     - fullName: 'Tim Tester'
-      cardNum: 1234567812345678
+      cardNum: ${USER_DEMO_CARD_1}
       expMonth: 12
       expYear: 2099
--
-  email: john
+
+- email: john
   username: j0hNny
-  password: 'y&x5Z#f6W532Z4445#Ae2HkwZVyDb7&oCUaDzFU'
+  password: ${USER_JOHN_PASSWORD}
   key: john
-  role: 'customer'
--
-  email: emma
-  username: E=ma²
-  password: 'y&x5Z#f6W532ZUf$q3DsdgfgfgxxUsvoCUaDzFU'
+  role: customer
+
+- email: emma
+  username: "E=ma²"
+  password: ${USER_EMMA_PASSWORD}
   key: emma
-  role: 'customer'
--
-  email: stan
+  role: customer
+
+- email: stan
   username: SmilinStan
-  password: 'ship coffin krypt cross estate supply insurance asbestos souvenir'
+  password: ${USER_STAN_PASSWORD}
   key: stan
   profileImage: '20.jpg'
-  role: 'deluxe'
+  role: deluxe
   securityQuestion:
     id: 10
-    answer: "Used Ship Emporium" # https://monkeyisland.fandom.com/wiki/Stan_S._Stanman
--
-  email: ethereum
+    answer: ${USER_STAN_SECURITY_ANSWER}
+
+- email: ethereum
   username: evmrox
-  password: 'private'
+  password: ${USER_ETHEREUM_PASSWORD}
   key: evm
-  role: 'deluxe'
+  role: deluxe
   feedback:
     comment: 'Please send me the juicy chatbot NFT in my wallet at /juicy-nft : "purpose betray marriage blame crunch monitor spin slide donate sport lift clutch"'
     rating: 1
   securityQuestion:
     id: 10
-    answer: "Used Emporium"
--
-  email: testing
-  password: 'IamUsedForTesting'
+    answer: ${USER_ETHEREUM_SECURITY_ANSWER}
+
+- email: testing
+  password: ${USER_TESTING_PASSWORD}
   key: LetUsTest
-  role: 'admin'
+  role: admin

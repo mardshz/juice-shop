@@ -12,4 +12,4 @@ for char in [chr(i) for i in range(33,126)] + [' ', '\n', '\t']:
 	encrypted_chars[str(c)] = char
 
 with open('announcement_encrypted.md', 'r') as fl:
-	print "".join([encrypted_chars[f[:-1]] for f in fl.readlines()])
+	print ("".join([encrypted_chars[f[:-1]] for f in fl.readlines()]))
