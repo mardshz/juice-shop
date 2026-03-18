@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-
 import crypto from 'node:crypto'
 import { type Request, type Response, type NextFunction } from 'express'
 import { type UserModel } from 'models/user'

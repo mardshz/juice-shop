@@ -16,26 +16,45 @@ const sleep = async (ms: number) => new Promise(resolve => setTimeout(resolve, m
 
 export function likeProductReviews () {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const id = utils.sanitizeForId(req.body.id)
+    const rawId = req.body?.id
+
+    // 1. Validate type
+    if (typeof rawId !== 'string') {
+      res.status(400).json({ error: 'Invalid id' })
+      return
+    }
+
+    // 2. Sanitize input (removes Non-IDs)
+    const id = utils.sanitizeForId(rawId)
+
+    // 3. Reject empty or malformed IDs
+    if (!id || typeof id !== 'string') {
+      res.status(400).json({ error: 'Invalid id' })
+      return
+    }
+
     const user = security.authenticatedUsers.from(req)
     if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
-    if (!id) {
-      return res.status(400).json({ error: 'Invalid id' })
+      res.status(401).json({ error: 'Unauthorized' })
+      return
     }
 
     try {
+      // 4. Safe NoSQL-injection-proof findOne()
       const review = await db.reviewsCollection.findOne({ _id: id })
+
       if (!review) {
-        return res.status(404).json({ error: 'Not found' })
+        res.status(404).json({ error: 'Not found' })
+        return
       }
 
       const likedBy = review.likedBy
       if (likedBy.includes(user.data.email)) {
-        return res.status(403).json({ error: 'Not allowed' })
+        res.status(403).json({ error: 'Not allowed' })
+        return
       }
 
+      // Safe update
       await db.reviewsCollection.update(
         { _id: id },
         { $inc: { likesCount: 1 } }
@@ -43,6 +62,7 @@ export function likeProductReviews () {
 
       // Artificial wait for timing attack challenge
       await sleep(150)
+
       try {
         const updatedReview: Review = await db.reviewsCollection.findOne({ _id: id })
         const updatedLikedBy = updatedReview.likedBy
