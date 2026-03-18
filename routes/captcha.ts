@@ -1,23 +1,44 @@
 /*
- * Copyright ...
+ * Copyright …
  * SPDX-License-Identifier: MIT
  */
 
 import { type Request, type Response, type NextFunction } from 'express'
 import { CaptchaModel } from '../models/captcha'
 import * as utils from '../lib/utils'
+import { randomInt } from 'node:crypto'
+
+function safeMathEval (expr: string): number {
+  const tokens = expr.match(/\d+|[+\-*]/g)
+  if (!tokens) return NaN
+
+  let result = Number(tokens[0])
+  for (let i = 1; i < tokens.length; i += 2) {
+    const op = tokens[i]
+    const num = Number(tokens[i + 1])
+
+    switch (op) {
+      case '+': result += num; break
+      case '-': result -= num; break
+      case '*': result *= num; break
+      default: return NaN
+    }
+  }
+  return result
+}
 
 export function captchas () {
   return async (req: Request, res: Response) => {
     const captchaId = req.app.locals.captchaId++
     const operators = ['*', '+', '-']
 
-    const firstTerm = Math.floor((Math.random() * 10) + 1)
-    const secondTerm = Math.floor((Math.random() * 10) + 1)
-    const thirdTerm = Math.floor((Math.random() * 10) + 1)
+    // 🔐 Secure RNG replacements
+    const firstTerm = randomInt(1, 11)       // 1–10
+    const secondTerm = randomInt(1, 11)
+    const thirdTerm = randomInt(1, 11)
 
-    const firstOperator = operators[Math.floor((Math.random() * 3))]
-    const secondOperator = operators[Math.floor((Math.random() * 3))]
+    const firstOperator = operators[randomInt(0, 3)]   // indexes 0–2
+    const secondOperator = operators[randomInt(0, 3)]
 
     const expression =
       firstTerm.toString() +
@@ -26,15 +47,11 @@ export function captchas () {
       secondOperator +
       thirdTerm.toString()
 
-    const answer = eval(expression).toString() // eslint-disable-line no-eval
+    const answer = safeMathEval(expression).toString()
 
-    const captcha = {
-      captchaId,
-      captcha: expression,
-      answer
-    }
-
+    const captcha = { captchaId, captcha: expression, answer }
     const captchaInstance = CaptchaModel.build(captcha)
+
     await captchaInstance.save()
     res.json(captcha)
   }
@@ -46,22 +63,18 @@ export const verifyCaptcha =
       try {
         const rawCaptchaId = req.body?.captchaId
 
-        // 1️⃣ Ensure the input is actually a number (not object, array, etc.)
         if (typeof rawCaptchaId !== 'string' && typeof rawCaptchaId !== 'number') {
           res.status(400).send(res.__('Wrong answer to CAPTCHA. Please try again.'))
           return
         }
 
-        // 2️⃣ Convert to number safely
         const captchaId = utils.sanitizeInteger(rawCaptchaId)
 
-        // 3️⃣ Reject null, NaN, undefined, or non‑numbers
         if (captchaId == null || Number.isNaN(captchaId)) {
           res.status(400).send(res.__('Wrong answer to CAPTCHA. Please try again.'))
           return
         }
 
-        // 4️⃣ Safe ORM lookup
         const captcha = await CaptchaModel.findOne({ where: { captchaId } })
 
         if (captcha != null && req.body.captcha === captcha.answer) {

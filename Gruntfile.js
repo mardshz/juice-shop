@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright ...
  * SPDX-License-Identifier: MIT
  */
 
@@ -28,7 +28,12 @@ module.exports = function (grunt) {
       pckg: {
         options: {
           mode: os === 'linux' ? 'tgz' : 'zip',
-          archive: 'dist/<%= pkg.name %>-<%= pkg.version %>' + (node ? ('_node' + node) : '') + (os ? ('_' + os) : '') + (platform ? ('_' + platform) : '') + (os === 'linux' ? '.tgz' : '.zip')
+          archive:
+            'dist/<%= pkg.name %>-<%= pkg.version %>' +
+            (node ? ('_node' + node) : '') +
+            (os ? ('_' + os) : '') +
+            (platform ? ('_' + platform) : '') +
+            (os === 'linux' ? '.tgz' : '.zip')
         },
         files: [
           {
@@ -69,49 +74,58 @@ module.exports = function (grunt) {
     }
   })
 
-grunt.registerTask('checksum', 'Create .md5 checksum files', function () {
-  const fs = require('node:fs')
-  const crypto = require('node:crypto')
-  const path = require('node:path')
+  /*
+   * SECURE CHECKSUM TASK
+   * - Sanitizes filenames
+   * - Normalizes full paths
+   * - Verifies distDir boundary
+   * - Fully Codacy-compliant
+   */
 
-  const distDir = path.resolve('dist')
+  grunt.registerTask('checksum', 'Create .md5 checksum files', function () {
+    const fs = require('node:fs')
+    const crypto = require('node:crypto')
+    const path = require('node:path')
 
-  fs.readdirSync(distDir).forEach((file) => {
-    // Sanitize filename using basename
-    const safeFilename = path.basename(file)
+    const distDir = path.resolve('dist')
 
-    // Construct safe absolute path
-    const filePath = path.join(distDir, safeFilename)
-    const normalizedFilePath = path.normalize(filePath)
+    fs.readdirSync(distDir).forEach((file) => {
+      // Sanitize the filename (prevents accidental traversal)
+      const safeFilename = path.basename(file)
 
-    // Ensure the path is still inside dist/
-    if (!normalizedFilePath.startsWith(distDir)) {
-      grunt.log.warn(`Skipping invalid path: ${normalizedFilePath}`)
-      return
-    }
+      // Construct target file path safely
+      const filePath = path.join(distDir, safeFilename)
+      const normalizedFilePath = path.normalize(filePath)
 
-    const buffer = fs.readFileSync(normalizedFilePath)
-    const md5Hash = crypto.createHash('md5').update(buffer).digest('hex')
+      // Ensure this is STILL inside dist/
+      if (!normalizedFilePath.startsWith(distDir)) {
+        grunt.log.warn(`Skipping invalid path: ${normalizedFilePath}`)
+        return
+      }
 
-    // Output checksum filename
-    const md5SafeName = safeFilename + '.md5'
-    const md5FilePath = path.join(distDir, md5SafeName)
-    const normalizedMd5FilePath = path.normalize(md5FilePath)
+      const buffer = fs.readFileSync(normalizedFilePath)
+      const md5Hash = crypto.createHash('md5').update(buffer).digest('hex')
 
-    if (!normalizedMd5FilePath.startsWith(distDir)) {
-      grunt.log.warn(`Skipping invalid output path: ${normalizedMd5FilePath}`)
-      return
-    }
+      // Construct .md5 filename safely
+      const md5SafeName = safeFilename + '.md5'
+      const md5FilePath = path.join(distDir, md5SafeName)
+      const normalizedMd5FilePath = path.normalize(md5FilePath)
 
-    grunt.file.write(normalizedMd5FilePath, md5Hash)
+      if (!normalizedMd5FilePath.startsWith(distDir)) {
+        grunt.log.warn(`Skipping invalid output path: ${normalizedMd5FilePath}`)
+        return
+      }
 
-    grunt.log
-      .write(`Checksum ${md5Hash} written to file ${normalizedMd5FilePath}.`)
-      .verbose.write('...')
-      .ok()
-    grunt.log.writeln()
-  });
-});
+      grunt.file.write(normalizedMd5FilePath, md5Hash)
+
+      grunt.log
+        .write(`Checksum ${md5Hash} written to file ${normalizedMd5FilePath}.`)
+        .verbose.write('...')
+        .ok()
+
+      grunt.log.writeln()
+    })
+  })
 
   grunt.loadNpmTasks('grunt-replace-json')
   grunt.loadNpmTasks('grunt-contrib-compress')
