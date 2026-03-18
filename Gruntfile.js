@@ -70,40 +70,46 @@ module.exports = function (grunt) {
   })
 
 grunt.registerTask('checksum', 'Create .md5 checksum files', function () {
-  const fs = require('node:fs');
-  const crypto = require('node:crypto');
-  const path = require('node:path');
+  const fs = require('node:fs')
+  const crypto = require('node:crypto')
+  const path = require('node:path')
 
-  const distDir = path.resolve('dist');
+  const distDir = path.resolve('dist')
 
-  fs.readdirSync(distDir).forEach(file => {
-    const filePath = path.join(distDir, file);
-    const normalizedFilePath = path.normalize(filePath);
+  fs.readdirSync(distDir).forEach((file) => {
+    // Sanitize filename using basename
+    const safeFilename = path.basename(file)
 
-    // Ensure the file path stays within /dist
+    // Construct safe absolute path
+    const filePath = path.join(distDir, safeFilename)
+    const normalizedFilePath = path.normalize(filePath)
+
+    // Ensure the path is still inside dist/
     if (!normalizedFilePath.startsWith(distDir)) {
-      grunt.log.warn(`Skipping invalid path: ${normalizedFilePath}`);
-      return;
+      grunt.log.warn(`Skipping invalid path: ${normalizedFilePath}`)
+      return
     }
 
-    const buffer = fs.readFileSync(normalizedFilePath);
-    const md5Hash = crypto.createHash('md5').update(buffer).digest('hex');
+    const buffer = fs.readFileSync(normalizedFilePath)
+    const md5Hash = crypto.createHash('md5').update(buffer).digest('hex')
 
-    const md5FilePath = path.join(distDir, file + '.md5');
-    const normalizedMd5FilePath = path.normalize(md5FilePath);
+    // Output checksum filename
+    const md5SafeName = safeFilename + '.md5'
+    const md5FilePath = path.join(distDir, md5SafeName)
+    const normalizedMd5FilePath = path.normalize(md5FilePath)
 
-    // Ensure the checksum file path also stays within /dist
     if (!normalizedMd5FilePath.startsWith(distDir)) {
-      grunt.log.warn(`Skipping invalid output path: ${normalizedMd5FilePath}`);
-      return;
+      grunt.log.warn(`Skipping invalid output path: ${normalizedMd5FilePath}`)
+      return
     }
 
-    grunt.file.write(normalizedMd5FilePath, md5Hash);
+    grunt.file.write(normalizedMd5FilePath, md5Hash)
+
     grunt.log
       .write(`Checksum ${md5Hash} written to file ${normalizedMd5FilePath}.`)
       .verbose.write('...')
-      .ok();
-    grunt.log.writeln();
+      .ok()
+    grunt.log.writeln()
   });
 });
 

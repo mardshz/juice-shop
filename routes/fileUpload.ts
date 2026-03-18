@@ -21,7 +21,7 @@ import * as utils from '../lib/utils'
 /*                                  HELPERS                                   */
 /* -------------------------------------------------------------------------- */
 
-function ensureFileIsPassed ({ file }: Request, res: Response, next: NextFunction) {
+function ensureFileIsPassed ({ file }: Request, res: Response, next: NextFunction): void {
   if (file) {
     next()
     return
@@ -35,7 +35,7 @@ function ensureFileIsPassed ({ file }: Request, res: Response, next: NextFunctio
 /*                              ZIP FILE HANDLER                               */
 /* -------------------------------------------------------------------------- */
 
-function handleZipFileUpload ({ file }: Request, res: Response, next: NextFunction) {
+function handleZipFileUpload ({ file }: Request, res: Response, next: NextFunction): void {
   try {
     if (!file || !utils.endsWith(file.originalname.toLowerCase(), '.zip')) {
       next()
@@ -47,12 +47,22 @@ function handleZipFileUpload ({ file }: Request, res: Response, next: NextFuncti
       return
     }
 
-    const tempZipPath = path.join(os.tmpdir(), `${randomUUID()}.zip`)
+    const tempZipFilename = `${randomUUID()}.zip`
+    const tempZipPath = path.join(os.tmpdir(), tempZipFilename)
+    const normalizedTempZipPath = path.normalize(tempZipPath)
 
-    fs.writeFile(tempZipPath, file.buffer, err => {
-      if (err) { next(err); return }
+    if (!normalizedTempZipPath.startsWith(os.tmpdir())) {
+      next(new Error('Invalid temporary ZIP path'))
+      return
+    }
 
-      fs.createReadStream(tempZipPath)
+    fs.writeFile(normalizedTempZipPath, file.buffer, (err) => {
+      if (err) {
+        next(err)
+        return
+      }
+
+      fs.createReadStream(normalizedTempZipPath)
         .pipe(unzipper.Parse())
         .on('entry', (entry: any) => {
           try {
@@ -72,13 +82,13 @@ function handleZipFileUpload ({ file }: Request, res: Response, next: NextFuncti
             )
 
             const stream = fs.createWriteStream(normalized)
-            stream.on('error', err => { next(err) })
+            stream.on('error', (err) => { next(err) })
             entry.pipe(stream)
           } catch (err) {
             next(err)
           }
         })
-        .on('error', err => { next(err) })
+        .on('error', (err) => { next(err) })
         .on('close', () => {
           res.status(204).end()
         })
@@ -92,7 +102,7 @@ function handleZipFileUpload ({ file }: Request, res: Response, next: NextFuncti
 /*                                 SIZE CHECK                                 */
 /* -------------------------------------------------------------------------- */
 
-function checkUploadSize ({ file }: Request, res: Response, next: NextFunction) {
+function checkUploadSize ({ file }: Request, res: Response, next: NextFunction): void {
   if (file) {
     challengeUtils.solveIf(
       challenges.uploadSizeChallenge,
@@ -106,14 +116,21 @@ function checkUploadSize ({ file }: Request, res: Response, next: NextFunction) 
 /*                             FILE TYPE CHECKER                              */
 /* -------------------------------------------------------------------------- */
 
-function checkFileType ({ file }: Request, res: Response, next: NextFunction) {
+function checkFileType ({ file }: Request, res: Response, next: NextFunction): void {
   const fileType = file?.originalname
     .substring(file.originalname.lastIndexOf('.') + 1)
     .toLowerCase()
 
   challengeUtils.solveIf(
     challenges.uploadTypeChallenge,
-    () => !(fileType === 'pdf' || fileType === 'xml' || fileType === 'zip' || fileType === 'yml' || fileType === 'yaml')
+    () =>
+      !(
+        fileType === 'pdf' ||
+        fileType === 'xml' ||
+        fileType === 'zip' ||
+        fileType === 'yml' ||
+        fileType === 'yaml'
+      )
   )
 
   next()
@@ -124,7 +141,7 @@ function checkFileType ({ file }: Request, res: Response, next: NextFunction) {
 /* -------------------------------------------------------------------------- */
 /* Full‑secure version: XXE disabled (Option A) */
 
-function handleXmlUpload ({ file }: Request, res: Response, next: NextFunction) {
+function handleXmlUpload ({ file }: Request, res: Response, next: NextFunction): void {
   if (!utils.endsWith(file?.originalname.toLowerCase(), '.xml')) {
     next()
     return
@@ -144,7 +161,6 @@ function handleXmlUpload ({ file }: Request, res: Response, next: NextFunction) 
     const sandbox = { libxml, data }
     vm.createContext(sandbox)
 
-    // secure: no external entity expansion
     const xmlDoc = vm.runInContext(
       'libxml.parseXml(data, { noblanks: true, nocdata: true })',
       sandbox,
@@ -155,14 +171,17 @@ function handleXmlUpload ({ file }: Request, res: Response, next: NextFunction) 
 
     challengeUtils.solveIf(
       challenges.xxeFileDisclosureChallenge,
-      () => false // Disabled because XXE is fully prevented
+      () => false
     )
 
     res.status(410)
     next(
       new Error(
         'B2B customer complaints via file upload have been deprecated for security reasons: ' +
-        utils.trunc(xmlString, 400) + ' (' + file.originalname + ')'
+          utils.trunc(xmlString, 400) +
+          ' (' +
+          file.originalname +
+          ')'
       )
     )
   } catch (err: unknown) {
@@ -178,7 +197,15 @@ function handleXmlUpload ({ file }: Request, res: Response, next: NextFunction) 
     }
 
     res.status(410)
-    next(new Error('B2B customer complaints via file upload have been deprecated for security reasons: ' + msg + ' (' + file.originalname + ')'))
+    next(
+      new Error(
+        'B2B customer complaints via file upload have been deprecated for security reasons: ' +
+          msg +
+          ' (' +
+          file.originalname +
+          ')'
+      )
+    )
   }
 }
 
@@ -186,7 +213,7 @@ function handleXmlUpload ({ file }: Request, res: Response, next: NextFunction) 
 /*                                YAML HANDLER                                 */
 /* -------------------------------------------------------------------------- */
 
-function handleYamlUpload ({ file }: Request, res: Response, next: NextFunction) {
+function handleYamlUpload ({ file }: Request, res: Response, next: NextFunction): void {
   if (
     !utils.endsWith(file?.originalname.toLowerCase(), '.yml') &&
     !utils.endsWith(file?.originalname.toLowerCase(), '.yaml')
@@ -199,7 +226,13 @@ function handleYamlUpload ({ file }: Request, res: Response, next: NextFunction)
 
   if (!file?.buffer || !utils.isChallengeEnabled(challenges.deprecatedInterfaceChallenge)) {
     res.status(410)
-    next(new Error('B2B customer complaints via file upload have been deprecated for security reasons (' + file?.originalname + ')'))
+    next(
+      new Error(
+        'B2B customer complaints via file upload have been deprecated for security reasons (' +
+          file?.originalname +
+          ')'
+      )
+    )
     return
   }
 
@@ -219,7 +252,10 @@ function handleYamlUpload ({ file }: Request, res: Response, next: NextFunction)
     next(
       new Error(
         'B2B customer complaints via file upload have been deprecated for security reasons: ' +
-        utils.trunc(yamlString, 400) + ' (' + file.originalname + ')'
+          utils.trunc(yamlString, 400) +
+          ' (' +
+          file.originalname +
+          ')'
       )
     )
   } catch (err: unknown) {
@@ -241,7 +277,10 @@ function handleYamlUpload ({ file }: Request, res: Response, next: NextFunction)
     next(
       new Error(
         'B2B customer complaints via file upload have been deprecated for security reasons: ' +
-        msg + ' (' + file.originalname + ')'
+          msg +
+          ' (' +
+          file.originalname +
+          ')'
       )
     )
   }
