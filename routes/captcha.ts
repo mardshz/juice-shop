@@ -33,11 +33,11 @@ export function captchas () {
     const operators = ['*', '+', '-']
 
     // 🔐 Secure RNG replacements
-    const firstTerm = randomInt(1, 11)       // 1–10
+    const firstTerm = randomInt(1, 11) // 1–10
     const secondTerm = randomInt(1, 11)
     const thirdTerm = randomInt(1, 11)
 
-    const firstOperator = operators[randomInt(0, 3)]   // indexes 0–2
+    const firstOperator = operators[randomInt(0, 3)] // indexes 0–2
     const secondOperator = operators[randomInt(0, 3)]
 
     const expression =

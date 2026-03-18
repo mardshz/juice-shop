@@ -30,9 +30,9 @@ module.exports = function (grunt) {
           mode: os === 'linux' ? 'tgz' : 'zip',
           archive:
             'dist/<%= pkg.name %>-<%= pkg.version %>' +
-            (node ? ('_node' + node) : '') +
-            (os ? ('_' + os) : '') +
-            (platform ? ('_' + platform) : '') +
+            ((Boolean(node)) ? ('_node' + node) : '') +
+            ((Boolean(os)) ? ('_' + os) : '') +
+            ((Boolean(platform)) ? ('_' + platform) : '') +
             (os === 'linux' ? '.tgz' : '.zip')
         },
         files: [
@@ -83,8 +83,11 @@ module.exports = function (grunt) {
    */
 
   grunt.registerTask('checksum', 'Create .md5 checksum files', function () {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const fs = require('node:fs')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const crypto = require('node:crypto')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const path = require('node:path')
 
     const distDir = path.resolve('dist')
