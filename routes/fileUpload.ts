@@ -24,42 +24,67 @@ function ensureFileIsPassed ({ file }: Request, res: Response, next: NextFunctio
   }
 }
 
-function handleZipFileUpload ({ file }: Request, res: Response, next: NextFunction) {
-  if (utils.endsWith(file?.originalname.toLowerCase(), '.zip')) {
-    if (((file?.buffer) != null) && utils.isChallengeEnabled(challenges.fileWriteChallenge)) {
-      const buffer = file.buffer
-      const filename = file.originalname.toLowerCase()
-      const tempFile = path.join(os.tmpdir(), filename)
-      fs.open(tempFile, 'w', function (err, fd) {
-        if (err != null) { next(err) }
-        fs.write(fd, buffer, 0, buffer.length, null, function (err) {
-          if (err != null) { next(err) }
-          fs.close(fd, function () {
-            fs.createReadStream(tempFile)
-              .pipe(unzipper.Parse())
-              .on('entry', function (entry: any) {
-                const fileName = entry.path
-                // Restrict all file processing to this directory only
-                const basePath = path.resolve('uploads/complaints/')
-                // Create the full path, but normalize to remove any '..'
-                const joinedPath = path.join(basePath, fileName)
-                const normalizedPath = path.normalize(joinedPath)
-                // Verify the normalizedPath is contained within our basePath
-                if (!normalizedPath.startsWith(basePath)) {
-                  entry.autodrain()
-                  return
-                }
-                const absolutePath = normalizedPath
-                challengeUtils.solveIf(challenges.fileWriteChallenge, () => { return absolutePath === path.resolve('ftp/legal.md') })
-                entry.pipe(fs.createWriteStream(absolutePath).on('error', function (err) { next(err) }))
-              }).on('error', function (err: unknown) { next(err) })
-          })
-        })
-      })
+function handleZipFileUpload({ file }: Request, res: Response, next: NextFunction) {
+  try {
+    // Only handle .zip files
+    if (!file || !utils.endsWith(file.originalname.toLowerCase(), '.zip')) {
+      return next()
     }
-    res.status(204).end()
-  } else {
-    next()
+
+    // Ensure buffer exists & challenge is active
+    if (!file.buffer || !utils.isChallengeEnabled(challenges.fileWriteChallenge)) {
+      return res.status(204).end()
+    }
+
+    const zipBuffer = file.buffer
+
+    // Save uploaded ZIP temporarily
+    const tempZipPath = path.join(os.tmpdir(), `${Date.now()}-${Math.random()}.zip`)
+
+    fs.writeFile(tempZipPath, zipBuffer, err => {
+      if (err) return next(err)
+
+      fs.createReadStream(tempZipPath)
+        .pipe(unzipper.Parse())
+        .on('entry', (entry: any) => {
+          try {
+            /**
+             * Do NOT trust entry.path (user-controlled inside ZIP)
+             * Extract only the extension and generate a SAFE filename
+             */
+            const ext = path.extname(entry.path) || '' // ".txt", ".md", etc.
+            const safeName = `${Date.now()}-${Math.random()}${ext}`
+
+            // Dedicated safe extraction directory
+            const baseDir = path.resolve('uploads/complaints/')
+            const destination = path.join(baseDir, safeName)
+            const normalized = path.normalize(destination)
+
+            // BLOCK traversal attempts
+            if (!normalized.startsWith(baseDir)) {
+              entry.autodrain()
+              return
+            }
+
+            // Preserve original Juice Shop challenge behavior
+            challengeUtils.solveIf(
+              challenges.fileWriteChallenge,
+              () => normalized === path.resolve('ftp/legal.md')
+            )
+
+            // Write file safely
+            const outStream = fs.createWriteStream(normalized)
+            outStream.on('error', err => next(err))
+            entry.pipe(outStream)
+          } catch (err) {
+            next(err)
+          }
+        })
+        .on('error', (err: unknown) => next(err))
+        .on('close', () => res.status(204).end())
+    })
+  } catch (err) {
+    next(err)
   }
 }
 
