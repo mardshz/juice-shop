@@ -24,11 +24,11 @@ function ensureFileIsPassed ({ file }: Request, res: Response, next: NextFunctio
   }
 }
 
-function handleZipFileUpload({ file }: Request, res: Response, next: NextFunction) {
+function handleZipFileUpload ({ file }: Request, res: Response, next: NextFunction) {
   try {
     // Only handle .zip files
     if (!file || !utils.endsWith(file.originalname.toLowerCase(), '.zip')) {
-      return next()
+      next(); return;
     }
 
     // Ensure buffer exists & challenge is active
@@ -42,7 +42,7 @@ function handleZipFileUpload({ file }: Request, res: Response, next: NextFunctio
     const tempZipPath = path.join(os.tmpdir(), `${Date.now()}-${Math.random()}.zip`)
 
     fs.writeFile(tempZipPath, zipBuffer, err => {
-      if (err) return next(err)
+      if (err) { next(err); return; }
 
       fs.createReadStream(tempZipPath)
         .pipe(unzipper.Parse())
@@ -74,13 +74,13 @@ function handleZipFileUpload({ file }: Request, res: Response, next: NextFunctio
 
             // Write file safely
             const outStream = fs.createWriteStream(normalized)
-            outStream.on('error', err => next(err))
+            outStream.on('error', err => { next(err); })
             entry.pipe(outStream)
           } catch (err) {
             next(err)
           }
         })
-        .on('error', (err: unknown) => next(err))
+        .on('error', (err: unknown) => { next(err); })
         .on('close', () => res.status(204).end())
     })
   } catch (err) {
