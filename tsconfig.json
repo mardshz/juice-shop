@@ -18,6 +18,7 @@
   },
   "include": [
     "cypress/**/*.ts",
+    "Gruntfile.js",
     "data/**/*.ts",
     "lib/**/*.ts",
     "lib/**/*.js",
