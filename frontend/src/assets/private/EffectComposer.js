@@ -80,7 +80,7 @@ THREE.EffectComposer.prototype = {
 
 					this.copyPass.render( this.renderer, this.writeBuffer, this.readBuffer, delta );
 
-					context.stencilFunc(context.NOTEQUAL, 1, 0xffffffff >>> 0);
+					context.stencilFunc(context.NOTEQUAL, 1, 0xFF >>> 0);
 
 				}
 
