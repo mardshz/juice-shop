@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright ...
  * SPDX-License-Identifier: MIT
  */
 
@@ -20,6 +20,43 @@ import { CodingChallengesInstruction } from './challenges/codingChallenges'
 import { AdminSectionInstruction } from './challenges/adminSection'
 import { ReflectedXssInstruction } from './challenges/reflectedXss'
 import { ExposedCredentialsInstruction } from './challenges/exposedCredentials'
+
+/* -------------------------------------------------------------------------- */
+/*                         XSS‑SAFE MARKDOWN SANITIZER                         */
+/* -------------------------------------------------------------------------- */
+
+function sanitizeHtml (html: string): string {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+
+  const dangerousTags = ['script', 'iframe', 'object', 'embed', 'meta', 'link', 'style']
+
+  dangerousTags.forEach(tag => {
+    const elements = doc.querySelectorAll(tag)
+    elements.forEach(el => el.remove())
+  })
+
+  const all = doc.querySelectorAll('*')
+  all.forEach(el => {
+    // remove JS event handlers
+    for (const attr of [...el.attributes]) {
+      if (attr.name.startsWith('on')) {
+        el.removeAttribute(attr.name)
+      }
+      if (attr.name === 'src' || attr.name === 'href') {
+        if (attr.value.startsWith('javascript:')) {
+          el.removeAttribute(attr.name)
+        }
+      }
+    }
+  })
+
+  return doc.body.innerHTML
+}
+
+/* -------------------------------------------------------------------------- */
+/*                      CHALLENGE METADATA (UNCHANGED)                         */
+/* -------------------------------------------------------------------------- */
 
 const challengeInstructions: ChallengeInstruction[] = [
   ScoreBoardInstruction,
@@ -44,36 +81,23 @@ export interface ChallengeInstruction {
 }
 
 export interface ChallengeHint {
-  /**
-   * Text in the hint box
-   * Can be formatted using markdown
-   */
   text: string
-  /**
-   * Query Selector String of the Element the hint should be displayed next to.
-   */
   fixture: string
-  /**
-   * Set to true if the hint should be displayed after the target
-   * Defaults to false (hint displayed before target)
-   */
   fixtureAfter?: boolean
-  /**
-   * Set to true if the hint should not be able to be skipped by clicking on it.
-   * Defaults to false
-   */
   unskippable?: boolean
-  /**
-   * Function declaring the condition under which the tutorial will continue.
-   */
   resolved: () => Promise<void>
-  /**
-   * Optional condition to skip this hint entirely.
-   */
   skipIf?: () => boolean | Promise<boolean>
 }
 
-function createElement (tag: string, styles: Record<string, string>, attributes: Record<string, string> = {}): HTMLElement {
+/* -------------------------------------------------------------------------- */
+/*                               DOM UTILITIES                                */
+/* -------------------------------------------------------------------------- */
+
+function createElement (
+  tag: string,
+  styles: Record<string, string>,
+  attributes: Record<string, string> = {}
+): HTMLElement {
   const element = document.createElement(tag)
   Object.assign(element.style, styles)
   for (const [key, value] of Object.entries(attributes)) {
@@ -81,6 +105,10 @@ function createElement (tag: string, styles: Record<string, string>, attributes:
   }
   return element
 }
+
+/* -------------------------------------------------------------------------- */
+/*                            SAFE HINT RENDERING                              */
+/* -------------------------------------------------------------------------- */
 
 function loadHint (hint: ChallengeHint): HTMLElement {
   const target = document.querySelector(hint.fixture)
@@ -94,7 +122,7 @@ function loadHint (hint: ChallengeHint): HTMLElement {
   const elemStyles = {
     position: 'absolute',
     zIndex: '20000',
-    backgroundColor: 'rgba(50, 115, 220, 0.9)',
+    backgroundColor: 'rgba(50,115,220,0.9)',
     maxWidth: '400px',
     minWidth: hint.text.length > 100 ? '350px' : '250px',
     padding: '16px',
@@ -110,35 +138,44 @@ function loadHint (hint: ChallengeHint): HTMLElement {
     animation: 'flash 0.2s'
   }
 
-  const elem = createElement('div', elemStyles, { id: 'hacking-instructor', title: hint.unskippable ? '' : 'Double-click to skip' })
+  const elem = createElement('div', elemStyles, {
+    id: 'hacking-instructor',
+    title: hint.unskippable ? '' : 'Double-click to skip'
+  })
 
-  const pictureStyles = {
-    minWidth: '64px',
-    minHeight: '64px',
-    width: '64px',
-    height: '64px',
-    marginRight: '8px'
-  }
-
-  const picture = createElement('img', pictureStyles, { src: '/assets/public/images/hackingInstructor.png' })
+  const picture = createElement(
+    'img',
+    { minWidth: '64px', minHeight: '64px', width: '64px', height: '64px', marginRight: '8px' },
+    { src: '/assets/public/images/hackingInstructor.png' }
+  )
 
   const textBox = createElement('span', { flexGrow: '2' })
-  textBox.innerHTML = snarkdown(hint.text)
 
-  const cancelButtonStyles = {
-    textDecoration: 'none',
-    backgroundColor: 'transparent',
-    border: 'none',
-    color: 'white',
-    fontSize: 'large',
-    position: 'relative',
-    zIndex: '20001',
-    top: '32px',
-    left: '5px',
-    cursor: 'pointer'
-  }
+  /* ---------------- SAFE Markdown rendering (XSS‑protected) ---------------- */
 
-  const cancelButton = createElement('button', cancelButtonStyles, { id: 'cancelButton', title: 'Cancel the tutorial' })
+  const unsafeHtml = snarkdown(hint.text)
+  const safeHtml = sanitizeHtml(unsafeHtml)
+  textBox.innerHTML = safeHtml
+
+  /* ------------------------------------------------------------------------ */
+
+  const cancelButton = createElement(
+    'button',
+    {
+      textDecoration: 'none',
+      backgroundColor: 'transparent',
+      border: 'none',
+      color: 'white',
+      fontSize: 'large',
+      position: 'relative',
+      zIndex: '20001',
+      top: '32px',
+      left: '5px',
+      cursor: 'pointer'
+    },
+    { id: 'cancelButton', title: 'Cancel the tutorial' }
+  )
+
   cancelButton.innerHTML = '<div>&times;</div>'
 
   elem.appendChild(picture)
@@ -161,23 +198,9 @@ function loadHint (hint: ChallengeHint): HTMLElement {
   return wrapper
 }
 
-async function waitForDoubleClick (element: HTMLElement) {
-  return new Promise((resolve) => {
-    element.addEventListener('dblclick', resolve)
-  })
-}
-
-async function waitForCancel (element: HTMLElement): Promise<string> {
-  return new Promise((resolve) => {
-    element.addEventListener('click', () => {
-      resolve('break')
-    })
-  })
-}
-
-export function hasInstructions (challengeName: string): boolean {
-  return challengeInstructions.find(({ name }) => name === challengeName) !== undefined
-}
+/* -------------------------------------------------------------------------- */
+/*                            ADDITIONAL UTILITIES                             */
+/* -------------------------------------------------------------------------- */
 
 function isElementInViewport (el: HTMLElement): boolean {
   const rect = el.getBoundingClientRect()
@@ -189,13 +212,32 @@ function isElementInViewport (el: HTMLElement): boolean {
   )
 }
 
+async function waitForDoubleClick (element: HTMLElement): Promise<void> {
+  
+return new Promise<void>((resolve) => {
+  element.addEventListener('dblclick', () => {
+    resolve()
+  })
+})
+}
+
+async function waitForCancel (element: HTMLElement): Promise<string> {
+  return new Promise<string>((resolve) => {
+    element.addEventListener('click', () => resolve('break'))
+  })
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                MAIN ENGINE                                  */
+/* -------------------------------------------------------------------------- */
+
 export async function startHackingInstructorFor (challengeName: string): Promise<void> {
-  const challengeInstruction = challengeInstructions.find(({ name }) => name === challengeName) ?? TutorialUnavailableInstruction
+  const challengeInstruction =
+    challengeInstructions.find(({ name }) => name === challengeName) ??
+    TutorialUnavailableInstruction
 
   for (const hint of challengeInstruction.hints) {
-    if (hint.skipIf && await hint.skipIf()) {
-      continue
-    }
+    if (hint.skipIf && await hint.skipIf()) continue
 
     const element = loadHint(hint)
     if (!element) {
@@ -203,23 +245,14 @@ export async function startHackingInstructorFor (challengeName: string): Promise
       continue
     }
 
-    if (!isElementInViewport(element)) {
-      element.scrollIntoView()
-    }
+    if (!isElementInViewport(element)) element.scrollIntoView()
 
+    const continueConditions: Promise<void | unknown>[] = [hint.resolved()]
 
-    const continueConditions: Promise<void | unknown>[] = [
-      hint.resolved()
-    ]
+    if (!hint.unskippable) continueConditions.push(waitForDoubleClick(element))
 
-    if (!hint.unskippable) {
-      continueConditions.push(waitForDoubleClick(element))
-    }
-    
     const cancelButton = document.getElementById('cancelButton')
-    if (cancelButton) {
-      continueConditions.push(waitForCancel(cancelButton))
-    }
+    if (cancelButton) continueConditions.push(waitForCancel(cancelButton))
 
     const command = await Promise.race(continueConditions)
     if (command === 'break') {

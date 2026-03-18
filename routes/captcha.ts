@@ -73,4 +73,3 @@ export const verifyCaptcha =
         next(error)
       }
     }
-    
