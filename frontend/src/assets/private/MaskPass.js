@@ -59,7 +59,7 @@ THREE.MaskPass.prototype = {
 
 		// only render where stencil is set to 1
 
-		context.stencilFunc( context.EQUAL, 1, 0xffffffff );  // draw if == 1
+		context.stencilFunc( context.EQUAL, 1, 0xFF );  // draw if == 1
 		context.stencilOp( context.KEEP, context.KEEP, context.KEEP );
 
 	}

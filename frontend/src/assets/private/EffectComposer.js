@@ -76,7 +76,7 @@ THREE.EffectComposer.prototype = {
 
 					var context = this.renderer.context;
 
-					context.stencilFunc(context.NOTEQUAL, 1, 0xffffffff >>> 0);
+					context.stencilFunc(context.EQUAL, 1, 0xFF);
 
 					this.copyPass.render( this.renderer, this.writeBuffer, this.readBuffer, delta );
 
